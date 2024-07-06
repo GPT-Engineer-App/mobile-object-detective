@@ -6,6 +6,8 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Layout from "./layouts/default"; // available: default, navbar, sidebar
 import Index from "./pages/Index.jsx";
 import TrainModel from "./pages/TrainModel.jsx";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AnalyticsProvider } from "./contexts/AnalyticsContext";
 
 const queryClient = new QueryClient();
 
@@ -15,7 +17,7 @@ export const navItems = [
     to: "/",
     icon: <Home className="h-4 w-4" />,
   },
-{
+  {
     title: "Train Model",
     to: "/train-model",
     icon: <Settings className="h-4 w-4" />,
@@ -27,15 +29,20 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              <Route path="train-model" element={<TrainModel />} />
-              {/* Add more routes here as needed */}
-            </Route>
-          </Routes>
-        </Router>
+        <AuthProvider>
+          <AnalyticsProvider>
+            <Router>
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Index />} />
+                  <Route path="train-model" element={<TrainModel />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="analytics" element={<Analytics />} />
+                </Route>
+              </Routes>
+            </Router>
+          </AnalyticsProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

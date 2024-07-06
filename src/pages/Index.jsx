@@ -3,8 +3,10 @@ import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import { Button } from "@/components/ui/button";
+import { useAnalytics } from "../contexts/AnalyticsContext";
 
 const Index = () => {
+  const { addAnalyticsData } = useAnalytics();
   const [facingMode, setFacingMode] = useState("user");
   const [isCameraActive, setIsCameraActive] = useState(true);
   const webcamRef = useRef(null);
@@ -75,6 +77,7 @@ const Index = () => {
       score: detection.score,
     }));
     setTrackingData((prevData) => [...prevData, ...newTrackingData]);
+    addAnalyticsData(newTrackingData);
   };
 
   const toggleCamera = () => {
