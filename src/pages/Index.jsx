@@ -5,6 +5,18 @@ import modelJson from "../model/model.json";
 import modelWeights from "../model/weights.bin";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
+const loadModel = async () => {
+  const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+  return model;
+};
+
+const detectObjects = async (imageData) => {
+  const model = await loadModel();
+  const inputTensor = tf.browser.fromPixels(imageData);
+  const predictions = await model.executeAsync(inputTensor);
+  return processPredictions(predictions);
+};
+
 const Index = () => {
   const { addAnalyticsData } = useAnalytics();
   const [facingMode, setFacingMode] = useState("user");
@@ -21,19 +33,8 @@ const Index = () => {
       console.log("TensorFlow model loaded.");
     };
     initializeModel();
+    runCoco();
   }, []);
-
-  const loadModel = async () => {
-    const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
-    return model;
-  };
-
-  const detectObjects = async (imageData) => {
-    const model = await loadModel();
-    const inputTensor = tf.browser.fromPixels(imageData);
-    const predictions = await model.executeAsync(inputTensor);
-    return processPredictions(predictions);
-  };
 
   const processPredictions = (predictions) => {
     const objects = [];
