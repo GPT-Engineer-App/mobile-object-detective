@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import * as tf from '@tensorflow/tfjs';
-import * as tflite from '@tensorflow/tfjs-tflite';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 const Index = () => {
   const webcamRef = useRef(null);
@@ -9,7 +9,7 @@ const Index = () => {
 
   useEffect(() => {
     const loadModel = async () => {
-      modelRef.current = await tflite.loadTFLiteModel('path/to/your/model.tflite');
+      modelRef.current = await cocoSsd.load();
     };
 
     loadModel();
@@ -22,8 +22,8 @@ const Index = () => {
       img.src = imageSrc;
       img.onload = async () => {
         const inputTensor = tf.browser.fromPixels(img);
-        const outputTensor = modelRef.current.predict(inputTensor);
-        // Process the outputTensor as needed
+        const predictions = await modelRef.current.detect(inputTensor);
+        // Process the predictions as needed
       };
     }
   }, [webcamRef, modelRef]);
