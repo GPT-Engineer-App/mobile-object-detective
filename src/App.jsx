@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { loadModel } from "@/lib/ml-framework";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Home } from "lucide-react";
@@ -16,6 +17,9 @@ export const navItems = [
 ];
 
 const App = () => {
+  useEffect(() => {
+    loadModel();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

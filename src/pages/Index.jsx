@@ -1,72 +1,53 @@
-import React, { useRef, useCallback } from "react";
-import Webcam from "react-webcam";
-import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Camera } from "react-camera-webcanvas";
+import { detectObjects } from "@/lib/ml-framework"; // Placeholder for the new ML framework
 
 const Index = () => {
-  const webcamRef = useRef(null);
-  const canvasRef = useRef(null);
+  const cameraRef = useRef(null);
+  const [imageData, setImageData] = useState(null);
+  const [detectionResults, setDetectionResults] = useState([]);
 
-  const runCoco = async () => {
-    const net = await cocossd.load();
-    console.log("Handpose model loaded.");
-    setInterval(() => {
-      detect(net);
-    }, 10);
-  };
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["detectionResults", imageData],
+    queryFn: () => detectObjects(imageData),
+    enabled: !!imageData,
+  });
 
-  const detect = async (net) => {
-    if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      const video = webcamRef.current.video;
-      const videoWidth = webcamRef.current.video.videoWidth;
-      const videoHeight = webcamRef.current.video.videoHeight;
+  useEffect(() => {
+    if (data) {
+      setDetectionResults(data);
+    }
+    if (error) {
+      toast.error("Object detection failed.");
+    }
+  }, [data, error]);
 
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-
-      const obj = await net.detect(video);
-
-      const ctx = canvasRef.current.getContext("2d");
-      drawRect(obj, ctx);
+  const handleCapture = () => {
+    if (cameraRef.current) {
+      const image = cameraRef.current.capture();
+      setImageData(image);
     }
   };
 
-  const drawRect = (detections, ctx) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    detections.forEach((prediction) => {
-      const [x, y, width, height] = prediction.bbox;
-      const text = prediction.class;
-
-      ctx.strokeStyle = "#00FFFF";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
-
-      ctx.font = "18px Arial";
-      ctx.fillStyle = "#00FFFF";
-      ctx.fillText(text, x, y);
-    });
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl mb-4">Object Detection</h1>
-      <Webcam
-        ref={webcamRef}
-        muted={true}
-        className="mx-auto object-cover w-full h-[400px]"
-      />
-      <canvas
-        ref={canvasRef}
-        className="mx-auto object-cover w-full h-[400px] absolute"
-      />
-      <Button onClick={runCoco} className="mt-4">
-        Start Detection
-      </Button>
+    <div className="text-center">
+      <h1 className="text-3xl mb-4">Object Detection App</h1>
+      <Camera ref={cameraRef} className="mx-auto object-cover w-full h-[400px]" />
+      <Button onClick={handleCapture} className="mt-4">Capture</Button>
+      {isLoading && <p>Loading...</p>}
+      {detectionResults.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-2xl">Detection Results:</h2>
+          <ul>
+            {detectionResults.map((result, index) => (
+              <li key={index}>{result.label}: {result.confidence.toFixed(2)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
