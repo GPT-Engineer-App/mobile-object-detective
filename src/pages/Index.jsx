@@ -5,6 +5,16 @@ import modelJson from "../model/model.json";
 import modelWeights from "../model/weights.bin";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
+const processPredictions = (predictions) => {
+  const objects = [];
+  predictions.forEach(prediction => {
+    const className = prediction.class;
+    const count = prediction.count;
+    objects.push({ class: className, count });
+  });
+  return objects;
+};
+
 const loadModel = async () => {
   const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
   return model;
@@ -35,16 +45,6 @@ const Index = () => {
     initializeModel();
     runCoco();
   }, []);
-
-  const processPredictions = (predictions) => {
-    const objects = [];
-    predictions.forEach(prediction => {
-      const className = prediction.class;
-      const count = prediction.count;
-      objects.push({ class: className, count });
-    });
-    return objects;
-  };
 
   const runCoco = () => {
     if (model) {
