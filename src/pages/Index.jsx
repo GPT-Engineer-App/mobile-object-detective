@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [facingMode, setFacingMode] = useState("user");
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const [model, setModel] = useState(null);
@@ -23,7 +24,9 @@ const Index = () => {
   const runCoco = () => {
     if (model) {
       setInterval(() => {
-        detect(model);
+        if (isCameraActive) {
+          detect(model);
+        }
       }, 10);
     }
   };
@@ -78,24 +81,29 @@ const Index = () => {
     setFacingMode((prevMode) => (prevMode === "user" ? "environment" : "user"));
   };
 
+  const stopCamera = () => {
+    setIsCameraActive(false);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-3xl mb-4">Object Detection and Tracking</h1>
-      <Webcam
-        videoConstraints={{ facingMode }}
-        ref={webcamRef}
-        style={{ width: "100%", height: "auto" }}
-      />
+      {isCameraActive && (
+        <Webcam
+          videoConstraints={{ facingMode }}
+          ref={webcamRef}
+          style={{ width: "100%", height: "auto" }}
+        />
+      )}
       <canvas
         ref={canvasRef}
         className="mx-auto object-cover w-full h-[400px] absolute"
       />
-      <Button onClick={runCoco} className="mt-4">
-        Start Detection
-      </Button>
-      <Button onClick={toggleCamera} className="mt-4">
-        Toggle Camera
-      </Button>
+      <div className="flex flex-col space-y-4 mt-4">
+        <Button onClick={runCoco}>Start Detection</Button>
+        <Button onClick={toggleCamera}>Toggle Camera</Button>
+        <Button onClick={stopCamera}>Stop Camera</Button>
+      </div>
     </div>
   );
 };
