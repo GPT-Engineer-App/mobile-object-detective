@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
-import { Button, Alert } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { setObjects } from "../store/slices/detectionSlice";
 
@@ -13,7 +13,7 @@ const Index = () => {
   const objects = useSelector((state) => state.detection.objects);
   const count = useSelector((state) => state.detection.count);
 
-  const startDetection = async () => {
+  const runCoco = async () => {
     const net = await cocossd.load();
     console.log("Coco SSD model loaded.");
     setInterval(() => {
@@ -70,7 +70,7 @@ const Index = () => {
         ref={canvasRef}
         className="mx-auto object-cover w-full h-[400px] absolute"
       />
-      <Button onClick={startDetection} className="mt-4">
+      <Button onClick={runCoco} className="mt-4">
         Start Detection
       </Button>
       <div className="mt-4">
