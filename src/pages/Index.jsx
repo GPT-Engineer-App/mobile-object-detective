@@ -15,13 +15,18 @@ const Index = () => {
   const [trackingData, setTrackingData] = useState([]);
 
   useEffect(() => {
-    const loadModel = async () => {
-      const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+    const initializeModel = async () => {
+      const model = await loadModel();
       setModel(model);
       console.log("TensorFlow model loaded.");
     };
-    loadModel();
+    initializeModel();
   }, []);
+
+  const loadModel = async () => {
+    const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+    return model;
+  };
 
   const detectObjects = async (imageData) => {
     const model = await loadModel();
