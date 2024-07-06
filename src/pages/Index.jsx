@@ -66,14 +66,16 @@ const Index = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-3xl mb-4">Object Detection</h1>
-      <Webcam
-        ref={webcamRef}
-        style={{ width: "100%", height: "auto" }}
-      />
-      <canvas
-        ref={canvasRef}
-        className="mx-auto object-cover w-full h-[400px] absolute"
-      />
+      <div className="relative w-full h-[400px]">
+        <Webcam
+          ref={webcamRef}
+          style={{ width: "100%", height: "100%" }}
+        />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full"
+        />
+      </div>
       <Button onClick={runCoco} className="mt-4">
         Start Detection
       </Button>
