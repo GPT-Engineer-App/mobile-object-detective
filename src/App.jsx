@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { loadModel } from "@/lib/ml-framework";
 import { TooltipProvider } from "@/components/ui/tooltip";
