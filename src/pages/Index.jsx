@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
@@ -8,13 +8,24 @@ const Index = () => {
   const [facingMode, setFacingMode] = useState("user");
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const [model, setModel] = useState(null);
+  const [trackingData, setTrackingData] = useState([]);
 
-  const runCoco = async () => {
-    const net = await cocossd.load();
-    console.log("Coco SSD model loaded.");
-    setInterval(() => {
-      detect(net);
-    }, 10);
+  useEffect(() => {
+    const loadModel = async () => {
+      const net = await cocossd.load();
+      setModel(net);
+      console.log("Coco SSD model loaded.");
+    };
+    loadModel();
+  }, []);
+
+  const runCoco = () => {
+    if (model) {
+      setInterval(() => {
+        detect(model);
+      }, 10);
+    }
   };
 
   const detect = async (net) => {
@@ -34,6 +45,7 @@ const Index = () => {
 
       const ctx = canvasRef.current.getContext("2d");
       drawRect(obj, ctx);
+      trackObjects(obj);
     }
   };
 
@@ -53,13 +65,22 @@ const Index = () => {
     });
   };
 
+  const trackObjects = (detections) => {
+    const newTrackingData = detections.map((detection) => ({
+      class: detection.class,
+      bbox: detection.bbox,
+      score: detection.score,
+    }));
+    setTrackingData((prevData) => [...prevData, ...newTrackingData]);
+  };
+
   const toggleCamera = () => {
     setFacingMode((prevMode) => (prevMode === "user" ? "environment" : "user"));
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl mb-4">Object Detection</h1>
+      <h1 className="text-3xl mb-4">Object Detection and Tracking</h1>
       <Webcam
         videoConstraints={{ facingMode }}
         ref={webcamRef}
@@ -72,7 +93,7 @@ const Index = () => {
       <Button onClick={runCoco} className="mt-4">
         Start Detection
       </Button>
-    <Button onClick={toggleCamera} className="mt-4">
+      <Button onClick={toggleCamera} className="mt-4">
         Toggle Camera
       </Button>
     </div>
