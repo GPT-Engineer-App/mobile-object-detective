@@ -10,7 +10,7 @@ const Index = () => {
 
   const runCoco = async () => {
     const net = await cocossd.load();
-    console.log("Handpose model loaded.");
+    console.log("Coco SSD model loaded.");
     setInterval(() => {
       detect(net);
     }, 10);
@@ -23,8 +23,8 @@ const Index = () => {
       webcamRef.current.video.readyState === 4
     ) {
       const video = webcamRef.current.video;
-      const videoWidth = webcamRef.current.video.videoWidth;
-      const videoHeight = webcamRef.current.video.videoHeight;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
 
       webcamRef.current.video.width = videoWidth;
       webcamRef.current.video.height = videoHeight;
@@ -57,8 +57,7 @@ const Index = () => {
       <h1 className="text-3xl mb-4">Object Detection</h1>
       <Webcam
         ref={webcamRef}
-        muted={true}
-        className="mx-auto object-cover w-full h-[400px]"
+        style={{ width: "100%", height: "auto" }}
       />
       <canvas
         ref={canvasRef}

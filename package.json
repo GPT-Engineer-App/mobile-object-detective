@@ -55,6 +55,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.52.0",
+    "react-native-camera": "^4.2.1",
     "react-resizable-panels": "^2.0.19",
     "react-router-dom": "^6.23.1",
     "react-webcam": "^7.2.0",
