@@ -1,12 +1,17 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { setObjects } from "../store/slices/detectionSlice";
 
 const Index = () => {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const dispatch = useDispatch();
+  const objects = useSelector((state) => state.detection.objects);
+  const count = useSelector((state) => state.detection.count);
 
   const runCoco = async () => {
     const net = await cocossd.load();
@@ -30,6 +35,7 @@ const Index = () => {
       webcamRef.current.video.height = videoHeight;
 
       const obj = await net.detect(video);
+      dispatch(setObjects(obj));
 
       const ctx = canvasRef.current.getContext("2d");
       drawRect(obj, ctx);
@@ -52,6 +58,10 @@ const Index = () => {
     });
   };
 
+  useEffect(() => {
+    runCoco();
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-3xl mb-4">Object Detection</h1>
@@ -66,6 +76,14 @@ const Index = () => {
       <Button onClick={runCoco} className="mt-4">
         Start Detection
       </Button>
+      <div className="mt-4">
+        <h2 className="text-2xl">Detected Objects: {count}</h2>
+        <ul>
+          {objects.map((obj, index) => (
+            <li key={index}>{obj.class}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
