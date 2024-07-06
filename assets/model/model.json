@@ -1,0 +1,62 @@
+{
+  "modelTopology": {
+    "class_name": "Model",
+    "config": {
+      "name": "simple_model",
+      "layers": [
+        {
+          "class_name": "InputLayer",
+          "config": {
+            "batch_input_shape": [null, 224, 224, 3],
+            "dtype": "float32",
+            "sparse": false,
+            "name": "input"
+          }
+        },
+        {
+          "class_name": "Dense",
+          "config": {
+            "name": "dense",
+            "trainable": true,
+            "units": 1,
+            "activation": "linear",
+            "use_bias": true,
+            "kernel_initializer": {
+              "class_name": "VarianceScaling",
+              "config": {
+                "scale": 1.0,
+                "mode": "fan_avg",
+                "distribution": "uniform",
+                "seed": null
+              }
+            },
+            "bias_initializer": {
+              "class_name": "Zeros",
+              "config": {}
+            }
+          }
+        }
+      ]
+    }
+  },
+  "format": "layers-model",
+  "generatedBy": "1.15.0",
+  "convertedBy": "TensorFlow.js Converter v1.5.0",
+  "weightsManifest": [
+    {
+      "paths": ["weights.bin"],
+      "weights": [
+        {
+          "name": "dense/kernel",
+          "shape": [150528, 1],
+          "dtype": "float32"
+        },
+        {
+          "name": "dense/bias",
+          "shape": [1],
+          "dtype": "float32"
+        }
+      ]
+    }
+  ]
+}
