@@ -1,6 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import store from './store';
 import { Home } from "lucide-react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Layout from "./layouts/default"; // available: default, navbar, sidebar
@@ -17,19 +19,21 @@ export const navItems = [
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              {/* Add more routes here as needed */}
-            </Route>
-          </Routes>
-        </Router>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                {/* Add more routes here as needed */}
+              </Route>
+            </Routes>
+          </Router>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </Provider>
   );
 };
 
