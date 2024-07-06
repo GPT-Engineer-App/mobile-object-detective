@@ -1,8 +1,8 @@
-import React, { useRef, useCallback, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
-import { Button } from "@/components/ui/button";
+import modelJson from "../model/model.json";
+import modelWeights from "../model/weights.bin";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
 const Index = () => {
@@ -16,76 +16,40 @@ const Index = () => {
 
   useEffect(() => {
     const loadModel = async () => {
-      const net = await cocossd.load();
-      setModel(net);
-      console.log("Coco SSD model loaded.");
+      const model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+      setModel(model);
+      console.log("TensorFlow model loaded.");
     };
     loadModel();
   }, []);
 
+  const detectObjects = async (imageData) => {
+    const model = await loadModel();
+    const inputTensor = tf.browser.fromPixels(imageData);
+    const predictions = await model.executeAsync(inputTensor);
+    return processPredictions(predictions);
+  };
+
+  const processPredictions = (predictions) => {
+    const objects = [];
+    predictions.forEach(prediction => {
+      const className = prediction.class;
+      const count = prediction.count;
+      objects.push({ class: className, count });
+    });
+    return objects;
+  };
+
   const runCoco = () => {
     if (model) {
-      setInterval(() => {
+      setInterval(async () => {
         if (isCameraActive) {
-          detect(model);
+          const video = webcamRef.current.video;
+          const objects = await detectObjects(video);
+          setTrackingData(objects);
         }
       }, 10);
     }
-  };
-
-  const detect = async (net) => {
-    if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
-
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-
-      const obj = await net.detect(video);
-
-      const ctx = canvasRef.current.getContext("2d");
-      drawRect(obj, ctx);
-      trackObjects(obj);
-    }
-  };
-
-  const drawRect = (detections, ctx) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    detections.forEach((prediction) => {
-      const [x, y, width, height] = prediction.bbox;
-      const text = prediction.class;
-
-      ctx.strokeStyle = "#00FFFF";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
-
-      ctx.font = "18px Arial";
-      ctx.fillStyle = "#00FFFF";
-      ctx.fillText(text, x, y);
-    });
-  };
-
-  const trackObjects = (detections) => {
-    const newTrackingData = detections.map((detection) => ({
-      class: detection.class,
-      bbox: detection.bbox,
-      score: detection.score,
-    }));
-    setTrackingData((prevData) => [...prevData, ...newTrackingData]);
-    addAnalyticsData(newTrackingData);
-  };
-
-  const toggleCamera = () => {
-    setFacingMode((prevMode) => (prevMode === "user" ? "environment" : "user"));
-  };
-
-  const stopCamera = () => {
-    setIsCameraActive(false);
   };
 
   return (
@@ -102,11 +66,6 @@ const Index = () => {
         ref={canvasRef}
         className="mx-auto object-cover w-full h-[400px] absolute"
       />
-      <div className="flex flex-col space-y-4 mt-4">
-        <Button onClick={runCoco}>Start Detection</Button>
-        <Button onClick={toggleCamera}>Toggle Camera</Button>
-        <Button onClick={stopCamera}>Stop Camera</Button>
-      </div>
     </div>
   );
 };
