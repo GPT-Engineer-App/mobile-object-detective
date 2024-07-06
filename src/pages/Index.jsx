@@ -1,11 +1,11 @@
 import React, { useRef, useCallback } from "react";
-import Webcam from "react-webcam";
+import { RNCamera } from "react-native-camera";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const webcamRef = useRef(null);
+  const cameraRef = useRef(null);
   const canvasRef = useRef(null);
 
   const runCoco = async () => {
@@ -18,18 +18,16 @@ const Index = () => {
 
   const detect = async (net) => {
     if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
+      typeof cameraRef.current !== "undefined" &&
+      cameraRef.current !== null &&
+      cameraRef.current.state.isAuthorized
     ) {
-      const video = webcamRef.current.video;
-      const videoWidth = webcamRef.current.video.videoWidth;
-      const videoHeight = webcamRef.current.video.videoHeight;
+      const options = { quality: 0.8, base64: true };
+      const data = await cameraRef.current.takePictureAsync(options);
+      const image = new Image();
+      image.src = `data:image/jpeg;base64,${data.base64}`;
 
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-
-      const obj = await net.detect(video);
+      const obj = await net.detect(image);
 
       const ctx = canvasRef.current.getContext("2d");
       drawRect(obj, ctx);
@@ -55,10 +53,12 @@ const Index = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <h1 className="text-3xl mb-4">Object Detection</h1>
-      <Webcam
-        ref={webcamRef}
-        muted={true}
-        className="mx-auto object-cover w-full h-[400px]"
+      <RNCamera
+        ref={cameraRef}
+        style={{ flex: 1, width: "100%" }}
+        type={RNCamera.Constants.Type.back}
+        flashMode={RNCamera.Constants.FlashMode.off}
+        captureAudio={false}
       />
       <canvas
         ref={canvasRef}
