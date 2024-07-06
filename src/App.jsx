@@ -8,6 +8,7 @@ import Index from "./pages/Index.jsx";
 import TrainModel from "./pages/TrainModel.jsx";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AnalyticsProvider } from "./contexts/AnalyticsContext";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
