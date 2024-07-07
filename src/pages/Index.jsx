@@ -1,9 +1,49 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
+import { bundleResourceIO } from "@tensorflow/tfjs-react-native";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
+
+// Function to load the model
+const loadModel = async () => {
+  const modelJson = require('./model/model.json');
+  const modelWeights = require('./model/weights.bin');
+  const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+  return model;
+};
+
+// Function to detect objects
+const detectObjects = async (imageData) => {
+  const model = await loadModel();
+  const inputTensor = tf.browser.fromPixels(imageData);
+  const predictions = await model.executeAsync(inputTensor);
+  return processPredictions(predictions);
+};
+
+// Function to process predictions
+const processPredictions = (predictions) => {
+  const objects = [];
+  predictions.forEach(prediction => {
+    const className = prediction.class;
+    const count = prediction.count;
+    objects.push({ class: className, count });
+  });
+  return objects;
+};
+
+// Function to preprocess image
+const preprocessImage = (imageData) => {
+  const enhancedImage = applyHistogramEqualization(imageData);
+  return enhancedImage;
+};
+
+// Function to handle camera stream
+const handleCameraStream = async ({ data }) => {
+  const enhancedImage = preprocessImage(data);
+  const objects = await detectObjects(enhancedImage);
+  setDetections(objects);
+};
 
 const Index = () => {
   const { addAnalyticsData } = useAnalytics();
@@ -11,46 +51,15 @@ const Index = () => {
   const [isCameraActive, setIsCameraActive] = useState(true);
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-  const [model, setModel] = useState(null);
   const [trackingData, setTrackingData] = useState([]);
 
-  useEffect(() => {
-    const loadModel = async () => {
-      const net = await cocossd.load();
-      setModel(net);
-      console.log("Coco SSD model loaded.");
-    };
-    loadModel();
-  }, []);
-
   const runCoco = () => {
-    if (model) {
+    if (isCameraActive) {
       setInterval(() => {
-        if (isCameraActive) {
-          detect(model);
+        if (webcamRef.current && webcamRef.current.video.readyState === 4) {
+          handleCameraStream({ data: webcamRef.current.video });
         }
       }, 10);
-    }
-  };
-
-  const detect = async (net) => {
-    if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
-
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-
-      const obj = await net.detect(video);
-
-      const ctx = canvasRef.current.getContext("2d");
-      drawRect(obj, ctx);
-      trackObjects(obj);
     }
   };
 
