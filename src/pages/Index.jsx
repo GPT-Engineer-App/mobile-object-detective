@@ -5,17 +5,14 @@ import { bundleResourceIO } from "@tensorflow/tfjs-react-native";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
-const [model, setModel] = useState(null);
-
 const loadModel = async () => {
   const modelJson = require('./model/model.json');
   const modelWeights = require('./model/weights.bin');
   const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-  console.log("Custom model loaded.");
   return model;
 };
 
-const detectObjects = async (imageData) => {
+const detectObjects = async (imageData, model) => {
   const inputTensor = tf.browser.fromPixels(imageData);
   const predictions = await model.executeAsync(inputTensor);
   return processPredictions(predictions);
@@ -36,9 +33,9 @@ const preprocessImage = (imageData) => {
   return enhancedImage;
 };
 
-const handleCameraStream = async ({ data }) => {
+const handleCameraStream = async ({ data }, model) => {
   const enhancedImage = preprocessImage(data);
-  const objects = await detectObjects(enhancedImage);
+  const objects = await detectObjects(enhancedImage, model);
   setDetections(objects);
 };
 
@@ -56,6 +53,7 @@ const Index = () => {
   const [isCameraActive, setIsCameraActive] = useState(true);
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const [model, setModel] = useState(null);
   const [trackingData, setTrackingData] = useState([]);
 
   useEffect(() => {
@@ -70,7 +68,7 @@ const Index = () => {
     if (model) {
       setInterval(() => {
         if (isCameraActive) {
-          handleCameraStream({ data: webcamRef.current.video });
+          handleCameraStream({ data: webcamRef.current.video }, model);
         }
       }, 10);
     }
