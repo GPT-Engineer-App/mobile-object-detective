@@ -34,27 +34,27 @@ const Index = () => {
   const [trackingData, setTrackingData] = useState([]);
 
   useEffect(() => {
-    const loadModel = async () => {
-      const net = await cocossd.load();
-      setModel(net);
-      console.log("Coco SSD model loaded.");
-    };
-    loadModel();
-  }, []);
+  const loadModel = async () => {
+    const net = await cocossd.load();
+    setModel(net);
+    console.log("Coco SSD model loaded.");
+  };
+  loadModel();
+}, []);
 
   const runCoco = () => {
-    if (model) {
-      setInterval(() => {
-        if (isCameraActive) {
-          try {
-            detect(model);
-          } catch (error) {
-            console.error("Error during detection:", error);
-          }
+  if (model) {
+    setInterval(() => {
+      if (isCameraActive) {
+        try {
+          detect(model);
+        } catch (error) {
+          console.error("Error during detection:", error);
         }
-      }, 10);
-    }
-  };
+      }
+    }, 10);
+  }
+};
 
   const detect = async (net) => {
     if (
