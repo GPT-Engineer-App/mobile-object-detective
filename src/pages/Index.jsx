@@ -5,6 +5,12 @@ import * as cocossd from "@tensorflow-models/coco-ssd";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
+// Dummy function for bundleResourceIO
+const bundleResourceIO = (modelJson, modelWeights) => {
+  // This is a placeholder function. Implement the actual logic as needed.
+  return [modelJson, modelWeights];
+};
+
 // Function to load the model
 const loadModel = async () => {
   const modelJson = require('./model/model.json');
@@ -60,6 +66,7 @@ const Index = () => {
   const canvasRef = useRef(null);
   const [model, setModel] = useState(null);
   const [trackingData, setTrackingData] = useState([]);
+  const [detections, setDetections] = useState([]);
 
   useEffect(() => {
     const loadModel = async () => {
