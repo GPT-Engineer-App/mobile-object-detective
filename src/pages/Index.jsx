@@ -36,6 +36,7 @@ const Index = () => {
   };
 
   const detectObjects = async (imageData) => {
+    const model = await loadModel();
     const inputTensor = tf.browser.fromPixels(imageData);
     const predictions = await model.executeAsync(inputTensor);
     return processPredictions(predictions);
