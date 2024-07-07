@@ -1,9 +1,49 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
+import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
+
+// Function to load the model
+const loadModel = async () => {
+  const modelJson = require('./model/model.json');
+  const modelWeights = require('./model/weights.bin');
+  const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+  return model;
+};
+
+// Function to detect objects
+const detectObjects = async (imageData) => {
+  const model = await loadModel();
+  const inputTensor = tf.browser.fromPixels(imageData);
+  const predictions = await model.executeAsync(inputTensor);
+  return processPredictions(predictions);
+};
+
+// Function to process predictions
+const processPredictions = (predictions) => {
+  const objects = [];
+  predictions.forEach(prediction => {
+    const className = prediction.class;
+    const count = prediction.count;
+    objects.push({ class: className, count });
+  });
+  return objects;
+};
+
+// Function to preprocess image
+const preprocessImage = (imageData) => {
+  const enhancedImage = applyHistogramEqualization(imageData);
+  return enhancedImage;
+};
+
+// Function to handle camera stream
+const handleCameraStream = async ({ data }) => {
+  const enhancedImage = preprocessImage(data);
+  const objects = await detectObjects(enhancedImage);
+  setDetections(objects);
+};
 
 const Index = () => {
   const { addAnalyticsData } = useAnalytics();
