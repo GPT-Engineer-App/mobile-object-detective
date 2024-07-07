@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
+import { bundleResourceIO } from "@tensorflow/tfjs-react-native";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
@@ -16,9 +16,11 @@ const Index = () => {
 
   useEffect(() => {
     const loadModel = async () => {
-      const net = await cocossd.load();
-      setModel(net);
-      console.log("Coco SSD model loaded.");
+      const modelJson = require('./model/model.json');
+      const modelWeights = require('./model/weights.bin');
+      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+      setModel(model);
+      console.log("Custom model loaded.");
     };
     loadModel();
   }, []);
@@ -27,57 +29,45 @@ const Index = () => {
     if (model) {
       setInterval(() => {
         if (isCameraActive) {
-          detect(model);
+          handleCameraStream({ data: webcamRef.current.video });
         }
       }, 10);
     }
   };
 
-  const detect = async (net) => {
-    if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
-
-      webcamRef.current.video.width = videoWidth;
-      webcamRef.current.video.height = videoHeight;
-
-      const obj = await net.detect(video);
-
-      const ctx = canvasRef.current.getContext("2d");
-      drawRect(obj, ctx);
-      trackObjects(obj);
-    }
+  const detectObjects = async (imageData) => {
+    const inputTensor = tf.browser.fromPixels(imageData);
+    const predictions = await model.executeAsync(inputTensor);
+    return processPredictions(predictions);
   };
 
-  const drawRect = (detections, ctx) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    detections.forEach((prediction) => {
-      const [x, y, width, height] = prediction.bbox;
-      const text = prediction.class;
-
-      ctx.strokeStyle = "#00FFFF";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
-
-      ctx.font = "18px Arial";
-      ctx.fillStyle = "#00FFFF";
-      ctx.fillText(text, x, y);
+  const processPredictions = (predictions) => {
+    const objects = [];
+    predictions.forEach(prediction => {
+      const className = prediction.class;
+      const count = prediction.count;
+      objects.push({ class: className, count });
     });
+    return objects;
   };
 
-  const trackObjects = (detections) => {
-    const newTrackingData = detections.map((detection) => ({
-      class: detection.class,
-      bbox: detection.bbox,
-      score: detection.score,
-    }));
-    setTrackingData((prevData) => [...prevData, ...newTrackingData]);
-    addAnalyticsData(newTrackingData);
+  const preprocessImage = (imageData) => {
+    const enhancedImage = applyHistogramEqualization(imageData);
+    return enhancedImage;
+  };
+
+  const handleCameraStream = async ({ data }) => {
+    const enhancedImage = preprocessImage(data);
+    const objects = await detectObjects(enhancedImage);
+    setDetections(objects);
+  };
+
+  const applyHistogramEqualization = (imageData) => {
+    return imageData; // Placeholder, replace with actual implementation
+  };
+
+  const setDetections = (objects) => {
+    console.log(objects); // Placeholder, replace with actual implementation
   };
 
   const toggleCamera = () => {
