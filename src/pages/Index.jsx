@@ -5,6 +5,14 @@ import { bundleResourceIO } from "@tensorflow/tfjs-react-native";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
+const loadModel = async () => {
+  const modelJson = require('./model/model.json');
+  const modelWeights = require('./model/weights.bin');
+  const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+  console.log("Custom model loaded.");
+  return model;
+};
+
 const Index = () => {
   const { addAnalyticsData } = useAnalytics();
   const [facingMode, setFacingMode] = useState("user");
@@ -15,28 +23,14 @@ const Index = () => {
   const [trackingData, setTrackingData] = useState([]);
 
   useEffect(() => {
-    const loadModel = async () => {
-      const modelJson = require('./model/model.json');
-      const modelWeights = require('./model/weights.bin');
-      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      setModel(model);
-      console.log("Custom model loaded.");
+    const initializeModel = async () => {
+      const loadedModel = await loadModel();
+      setModel(loadedModel);
     };
-    loadModel();
+    initializeModel();
   }, []);
 
-  const runCoco = () => {
-    if (model) {
-      setInterval(() => {
-        if (isCameraActive) {
-          handleCameraStream({ data: webcamRef.current.video });
-        }
-      }, 10);
-    }
-  };
-
   const detectObjects = async (imageData) => {
-    const model = await loadModel();
     const inputTensor = tf.browser.fromPixels(imageData);
     const predictions = await model.executeAsync(inputTensor);
     return processPredictions(predictions);
@@ -69,6 +63,16 @@ const Index = () => {
 
   const setDetections = (objects) => {
     console.log(objects); // Placeholder, replace with actual implementation
+  };
+
+  const runCoco = () => {
+    if (model) {
+      setInterval(() => {
+        if (isCameraActive) {
+          handleCameraStream({ data: webcamRef.current.video });
+        }
+      }, 10);
+    }
   };
 
   const toggleCamera = () => {
