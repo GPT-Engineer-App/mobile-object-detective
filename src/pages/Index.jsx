@@ -13,6 +13,41 @@ const loadModel = async () => {
   return model;
 };
 
+const detectObjects = async (imageData) => {
+  const inputTensor = tf.browser.fromPixels(imageData);
+  const predictions = await model.executeAsync(inputTensor);
+  return processPredictions(predictions);
+};
+
+const processPredictions = (predictions) => {
+  const objects = [];
+  predictions.forEach(prediction => {
+    const className = prediction.class;
+    const count = prediction.count;
+    objects.push({ class: className, count });
+  });
+  return objects;
+};
+
+const preprocessImage = (imageData) => {
+  const enhancedImage = applyHistogramEqualization(imageData);
+  return enhancedImage;
+};
+
+const handleCameraStream = async ({ data }) => {
+  const enhancedImage = preprocessImage(data);
+  const objects = await detectObjects(enhancedImage);
+  setDetections(objects);
+};
+
+const applyHistogramEqualization = (imageData) => {
+  return imageData; // Placeholder, replace with actual implementation
+};
+
+const setDetections = (objects) => {
+  console.log(objects); // Placeholder, replace with actual implementation
+};
+
 const Index = () => {
   const { addAnalyticsData } = useAnalytics();
   const [facingMode, setFacingMode] = useState("user");
@@ -29,41 +64,6 @@ const Index = () => {
     };
     initializeModel();
   }, []);
-
-  const detectObjects = async (imageData) => {
-    const inputTensor = tf.browser.fromPixels(imageData);
-    const predictions = await model.executeAsync(inputTensor);
-    return processPredictions(predictions);
-  };
-
-  const processPredictions = (predictions) => {
-    const objects = [];
-    predictions.forEach(prediction => {
-      const className = prediction.class;
-      const count = prediction.count;
-      objects.push({ class: className, count });
-    });
-    return objects;
-  };
-
-  const preprocessImage = (imageData) => {
-    const enhancedImage = applyHistogramEqualization(imageData);
-    return enhancedImage;
-  };
-
-  const handleCameraStream = async ({ data }) => {
-    const enhancedImage = preprocessImage(data);
-    const objects = await detectObjects(enhancedImage);
-    setDetections(objects);
-  };
-
-  const applyHistogramEqualization = (imageData) => {
-    return imageData; // Placeholder, replace with actual implementation
-  };
-
-  const setDetections = (objects) => {
-    console.log(objects); // Placeholder, replace with actual implementation
-  };
 
   const runCoco = () => {
     if (model) {
