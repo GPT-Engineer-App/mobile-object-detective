@@ -5,6 +5,8 @@ import { bundleResourceIO } from "@tensorflow/tfjs-react-native";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "../contexts/AnalyticsContext";
 
+const [model, setModel] = useState(null);
+
 const loadModel = async () => {
   const modelJson = require('./model/model.json');
   const modelWeights = require('./model/weights.bin');
@@ -54,7 +56,6 @@ const Index = () => {
   const [isCameraActive, setIsCameraActive] = useState(true);
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-  const [model, setModel] = useState(null);
   const [trackingData, setTrackingData] = useState([]);
 
   useEffect(() => {
